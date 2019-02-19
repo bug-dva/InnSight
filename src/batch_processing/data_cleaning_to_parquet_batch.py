@@ -34,4 +34,3 @@ for file in file_list:
         df_final.write.mode(mode).parquet(parquet_file_name)
     except Exception as e:
         print(e)
-

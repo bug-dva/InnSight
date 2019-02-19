@@ -10,9 +10,11 @@ config.read('config.ini')
 spark = SparkSession.builder.appName('DataCleaning').getOrCreate()
 
 mode = "append"
-url = "jdbc:postgresql://"+config['DEFAULT']['POSTGRESQL_IP']+':'+config['DEFAULT']['POSTGRESQL_PORT']+"/price_insight_db"
-properties = {"user": config['DEFAULT']['DB_USER'], "password": config['DEFAULT']['DB_PASSWORD'], "driver": "org.postgresql.Driver"}
-
+url = "jdbc:postgresql://{}:{}/price_insight_db".format(config['DEFAULT']['POSTGRESQL_IP'],
+                                                        config['DEFAULT']['POSTGRESQL_PORT'])
+properties = {"user": config['DEFAULT']['DB_USER'],
+              "password": config['DEFAULT']['DB_PASSWORD'],
+              "driver": "org.postgresql.Driver"}
 
 get_price_udf = udf(lambda x: float(x.replace('$', '').replace(',', '')), FloatType())
 

@@ -21,7 +21,8 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.layout = html.Div(style={'font-family': 'monospace'}, children=[
     html.Div([
         html.H1(children='InnSight', style={'margin': 'auto', 'text-align': 'center', 'font-weight': 'bold'}),
-        html.H5(children='Insights for Airbnb Hosts', style={'margin': 'auto', 'text-align': 'center', 'font-weight': 'bold'})
+        html.H5(children='Insights for Airbnb Hosts',
+                style={'margin': 'auto', 'text-align': 'center', 'font-weight': 'bold'})
     ]),
 
     html.Br(),
@@ -80,6 +81,7 @@ def update_output(_, value):
                        'paper_bgcolor': 'rgba(0,0,0,0)',
                        'plot_bgcolor': 'rgba(0,0,0,0)',
                        'font': {'family': 'monospace'}}}
+
 
 @app.callback(
     dash.dependencies.Output('seasonality', 'figure'),

@@ -35,7 +35,7 @@ data_cleaning_task = SSHOperator(
 stats_aggregation_task = SSHOperator(
     ssh_conn_id='spark_master_conn',
     task_id='stats_aggregation',
-    command='source ~/.profile; cd ~/PriceInsight/price_stats_calculation; ~/.local/bin/spark-submit zipcode_stats.py los_angeles',
+    command='source ~/.profile; cd ~/PriceInsight/price_stats_calculation; ~/.local/bin/spark-submit metrics_calculation_batch.py los_angeles',
     dag=dag)
 
 config_generation_task.set_upstream(data_fetch_task)
