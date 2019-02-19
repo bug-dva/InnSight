@@ -3,7 +3,6 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
-import plotly.graph_objs as go
 import random
 from time import gmtime, strftime
 import psycopg2
@@ -13,19 +12,23 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
+color = 'rgb(245, 94, 97)'
+month_mapping = {'1': 'Jan', '2': 'Feb', '3': 'Mar', '4': 'Apr', '5': 'May', '6': 'Jun', '7': 'Jul', '8': 'Aug',
+                 '9': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dec'}
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-app.layout = html.Div(children=[
-    html.H1(children='InnSight'),
-
-    html.Div(children='''
-        Zipcode:
-    '''),
-
+app.layout = html.Div(style={'font-family': 'monospace'}, children=[
     html.Div([
-        html.Div(dcc.Input(id='input-box', type='text')),
+        html.H1(children='InnSight', style={'margin': 'auto', 'text-align': 'center', 'font-weight': 'bold'}),
+        html.H5(children='Insights for Airbnb Hosts', style={'margin': 'auto', 'text-align': 'center', 'font-weight': 'bold'})
+    ]),
+
+    html.Br(),
+
+    html.Div(style={'margin': 'auto', 'text-align': 'center'}, children=[
+        html.Label('Please enter a zipcode: ', style={'display': 'inline', 'font-size': '130%'}),
+        dcc.Input(id='input-box', type='text', style={'margin': '10px'}),
         html.Button('Submit', id='button'),
     ]),
 
@@ -39,24 +42,25 @@ app.layout = html.Div(children=[
                 ], className='six columns'),
                 html.Div([
                     dcc.Graph(
-                        id='average-price2'
+                        id='seasonality'
                     )
                 ], className='six columns'),
             ], className='row'),
             html.Div([
                 html.Div([
                     dcc.Graph(
-                        id='distribution'
+                        id='property-type'
                     )
                 ], className='six columns'),
                 html.Div([
                     dcc.Graph(
-                        id='distribution2'
+                        id='room-type'
                     )
                 ], className='six columns'),
             ], className='row')
         ], className='nine columns'),
         html.Div([
+            html.P('Live local booking price', style={'font-size': '130%'}),
             dash_table.DataTable(
                 id='price-event',
                 columns=[{"name": "Time", "id": "time"}, {"name": "Price", "id": "price"}],
@@ -72,33 +76,45 @@ app.layout = html.Div(children=[
     [dash.dependencies.State('input-box', 'value')])
 def update_output(_, value):
     return {'data': [get_average_price(value)],
-            'layout': {'title': 'Historical Price Trend'}}
+            'layout': {'title': 'Historical Price Trend',
+                       'paper_bgcolor': 'rgba(0,0,0,0)',
+                       'plot_bgcolor': 'rgba(0,0,0,0)',
+                       'font': {'family': 'monospace'}}}
 
 @app.callback(
-    dash.dependencies.Output('average-price2', 'figure'),
+    dash.dependencies.Output('seasonality', 'figure'),
     [dash.dependencies.Input('button', 'n_clicks')],
     [dash.dependencies.State('input-box', 'value')])
 def update_output(_, value):
     return {'data': [get_seasonality(value)],
-            'layout': {'title': 'Seasonality'}}
+            'layout': {'title': 'Seasonality',
+                       'paper_bgcolor': 'rgba(0,0,0,0)',
+                       'plot_bgcolor': 'rgba(0,0,0,0)',
+                       'font': {'family': 'monospace'}}}
 
 
 @app.callback(
-    dash.dependencies.Output('distribution', 'figure'),
+    dash.dependencies.Output('property-type', 'figure'),
     [dash.dependencies.Input('button', 'n_clicks')],
     [dash.dependencies.State('input-box', 'value')])
 def update_output(_, value):
     return {'data': [get_property_type(value)],
-            'layout': {'title': 'Property Type'}}
+            'layout': {'title': 'Property Type',
+                       'paper_bgcolor': 'rgba(0,0,0,0)',
+                       'plot_bgcolor': 'rgba(0,0,0,0)',
+                       'font': {'family': 'monospace'}}}
 
 
 @app.callback(
-    dash.dependencies.Output('distribution2', 'figure'),
+    dash.dependencies.Output('room-type', 'figure'),
     [dash.dependencies.Input('button', 'n_clicks')],
     [dash.dependencies.State('input-box', 'value')])
 def update_output(_, value):
     return {'data': [get_bedroom_type(value)],
-            'layout': {'title': 'Room Type'}}
+            'layout': {'title': 'Room Type',
+                       'paper_bgcolor': 'rgba(0,0,0,0)',
+                       'plot_bgcolor': 'rgba(0,0,0,0)',
+                       'font': {'family': 'monospace'}}}
 
 
 @app.callback(
@@ -134,12 +150,12 @@ def read_data_from_db(database, sql):
 def get_bedroom_type(zipcode):
     if zipcode is None:
         # return empty dict
-        return {'x': [], 'y': [], 'type': 'bar', 'name': 'Price'}
+        return {'x': [], 'y': [], 'type': 'bar', 'name': 'Price', 'marker': {'color': color}}
 
     rows = read_data_from_db('price_insight_db',
-                             "select * from result_room_type_distribution_san_francisco where zipcode = '%s' order by bedrooms" % zipcode)
+                             "select * from result_room_type_distribution_all where zipcode = '%s' order by bedrooms" % zipcode)
 
-    dict_data = {'x': [], 'y': [], 'type': 'bar', 'name': 'Price'}
+    dict_data = {'x': [], 'y': [], 'type': 'bar', 'name': 'Price', 'marker': {'color': color}}
     for row in rows:
         dict_data['x'].append(str(row[1]).split(' ')[0])
         dict_data['y'].append(str(row[2]))
@@ -150,12 +166,12 @@ def get_bedroom_type(zipcode):
 def get_property_type(zipcode):
     if zipcode is None:
         # return empty dict
-        return {'x': [], 'y': [], 'type': 'bar', 'name': 'Price'}
+        return {'x': [], 'y': [], 'type': 'bar', 'name': 'Price', 'marker': {'color': color}}
 
     rows = read_data_from_db('price_insight_db',
-                             "select * from result_rental_type_distribution_san_francisco where zipcode = '%s' and count > 5" % zipcode)
+                             "select * from result_rental_type_distribution_all where zipcode = '%s' and count > 5" % zipcode)
 
-    dict_data = {'x': [], 'y': [], 'type': 'bar', 'name': 'Price'}
+    dict_data = {'x': [], 'y': [], 'type': 'bar', 'name': 'Price', 'marker': {'color': color}}
     for row in rows:
         dict_data['x'].append(str(row[1]).split(' ')[0])
         dict_data['y'].append(str(row[2]))
@@ -166,15 +182,15 @@ def get_property_type(zipcode):
 def get_seasonality(zipcode):
     if zipcode is None:
         # return empty dict
-        return {'x': [], 'y': [], 'type': 'bar', 'name': 'Price'}
+        return {'x': [], 'y': [], 'type': 'bar', 'name': 'Price', 'marker': {'color': color}}
 
     rows = read_data_from_db('price_insight_db',
-                             "select * from seasonality_san_francisco where zipcode = '%s' order by month" % zipcode)
+                             "select * from seasonality_all where zipcode = '%s' order by month" % zipcode)
 
-    dict_data = {'x': [], 'y': [], 'type': 'bar', 'name': 'Price'}
+    dict_data = {'x': [], 'y': [], 'type': 'bar', 'name': 'Price', 'marker': {'color': color}}
     for row in rows:
         dict_data['x'].append(str(row[1]).split(' ')[0])
-        dict_data['y'].append(str(row[2]))
+        dict_data['y'].append(month_mapping.get(str(row[2])))
 
     return dict_data
 
@@ -182,10 +198,10 @@ def get_seasonality(zipcode):
 def get_average_price(zipcode):
     if zipcode is None:
         # return empty dict
-        return go.Scatter(x=[], y=[], mode='lines', name='Price')
+        return {'x': [], 'y': [], 'type': 'scatter', 'mode': 'lines', 'name': 'Price', 'marker': {'color': color}}
 
     rows = read_data_from_db('price_insight_db',
-                             "select * from trend_by_zipcode_sf where zipcode = '%s' order by timestamp" % zipcode)
+                             "select * from average_price_trend_all where zipcode = '%s' order by timestamp" % zipcode)
 
     x = []
     y = []
@@ -193,7 +209,7 @@ def get_average_price(zipcode):
         x.append(str(row[1]).split(' ')[0])
         y.append(str(row[2]))
 
-    return go.Scatter(x=x, y=y, mode='lines', name='Price')
+    return {'x': x, 'y': y, 'type': 'scatter', 'mode': 'lines', 'name': 'Price', 'marker': {'color': color}}
 
 
 curtime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -203,28 +219,14 @@ def get_price_event(zipcode):
     if zipcode is None:
         # return empty dict
         return []
-    return [{'time': curtime, 'price': random.randint(200, 500)},
-            {'time': curtime, 'price': random.randint(200, 500)},
-            {'time': curtime, 'price': random.randint(200, 500)},
-            {'time': curtime, 'price': random.randint(200, 500)},
-            {'time': curtime, 'price': random.randint(200, 500)},
-            {'time': curtime, 'price': random.randint(200, 500)},
-            {'time': curtime, 'price': random.randint(200, 600)},
-            {'time': curtime, 'price': random.randint(200, 500)},
-            {'time': curtime, 'price': random.randint(200, 500)},
-            {'time': curtime, 'price': random.randint(200, 500)},
-            {'time': curtime, 'price': random.randint(200, 500)},
-            {'time':'2019-02-06 01:45:13', 'price': random.randint(200, 500)},
-            {'time':'2019-02-06 03:45:25', 'price': random.randint(200, 500)},
-            {'time':'2019-02-06 08:45:46', 'price': random.randint(200, 500)},
-            {'time':'2019-02-06 08:09:45', 'price': random.randint(200, 500)}]
 
     rows = read_data_from_db('price_insight_db',
-                             "select * from zipcode_stats where zipcode = '%s' order by timestamp" % zipcode)
+                             "select timestamp, price from streaming_data where zipcode = '%s' order by timestamp "
+                             "limit 10" % zipcode)
 
     data = []
     for row in rows:
-        data.append({'time': str(row[1]).split(' ')[0], 'price': str(row[2])})
+        data.append({'time': str(row[0]).split(' ')[0], 'price': str(row[1])})
 
     return data
 
