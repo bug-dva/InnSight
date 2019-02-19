@@ -20,7 +20,7 @@ def download(url, filename):
 def rename(url):
     data_info = url.split(".com/")[1]
     dataname = data_info.split("/")
-    filename = dataname[0]+"_"+dataname[1]+"_"+dataname[2]+"_"+dataname[3]+"_"+dataname[5]
+    filename = dataname[0] + "_" + dataname[1] + "_" + dataname[2] + "_" + dataname[3] + "_" + dataname[5]
     return filename
 
 
