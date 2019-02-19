@@ -1,6 +1,5 @@
 from airflow import DAG
-from airflow.operators.bash_operator import BashOperator
-from datetime import datetime, timedelta
+from datetime import datetime
 from airflow.contrib.operators.ssh_operator import SSHOperator
 
 default_args = {
@@ -17,25 +16,33 @@ dag = DAG('listing_stats_batch', default_args=default_args, schedule_interval='@
 data_fetch_task = SSHOperator(
     ssh_conn_id='data_fetch_conn',
     task_id='data_fetch',
-    command='cd ~/PriceInsight/data_fetch; ./data_fetch.sh los-angeles',
+    command='cd ~/InnSight/data_fetch; ./data_fetch.sh all',
     dag=dag)
 
 config_generation_task = SSHOperator(
     ssh_conn_id='spark_master_conn',
     task_id='config_generation',
-    command='cd ~/PriceInsight/price_stats_calculation; ./s3_urls_generation.sh los-angeles',
+    command='cd ~/InnSight/batch_processing; ./s3_urls_generation.sh all',
     dag=dag)
 
 data_cleaning_task = SSHOperator(
     ssh_conn_id='spark_master_conn',
     task_id='data_cleaning',
-    command='source ~/.profile; cd ~/PriceInsight/price_stats_calculation; ~/.local/bin/spark-submit data_cleaning_to_db_batch.py los_angeles',
+    command='source ~/.profile; '
+            'cd ~/InnSight/batch_processing; '
+            '~/.local/bin/spark-submit '
+            '--executor-memory 4G --master spark://ip-10-0-0-11.us-west-2.compute.internal:7077 '
+            'data_cleaning_to_parquet_batch.py all',
     dag=dag)
 
 stats_aggregation_task = SSHOperator(
     ssh_conn_id='spark_master_conn',
     task_id='stats_aggregation',
-    command='source ~/.profile; cd ~/PriceInsight/price_stats_calculation; ~/.local/bin/spark-submit metrics_calculation_batch.py los_angeles',
+    command='source ~/.profile; '
+            'cd ~/InnSight/batch_processing; '
+            '~/.local/bin/spark-submit '
+            '--executor-memory 4G --master spark://ip-10-0-0-11.us-west-2.compute.internal:7077 '
+            'metrics_calculation_batch.py all',
     dag=dag)
 
 config_generation_task.set_upstream(data_fetch_task)
