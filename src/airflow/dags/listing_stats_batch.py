@@ -29,7 +29,7 @@ config_generation_task = SSHOperator(
 data_cleaning_task = SSHOperator(
     ssh_conn_id='spark_master_conn',
     task_id='data_cleaning',
-    command='source ~/.profile; cd ~/PriceInsight/price_stats_calculation; ~/.local/bin/spark-submit all_write_columns_to_db.py los_angeles',
+    command='source ~/.profile; cd ~/PriceInsight/price_stats_calculation; ~/.local/bin/spark-submit data_cleaning_to_db_batch.py los_angeles',
     dag=dag)
 
 stats_aggregation_task = SSHOperator(
