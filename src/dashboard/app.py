@@ -191,8 +191,8 @@ def get_seasonality(zipcode):
 
     dict_data = {'x': [], 'y': [], 'type': 'bar', 'name': 'Price', 'marker': {'color': color}}
     for row in rows:
-        dict_data['x'].append(str(row[1]).split(' ')[0])
-        dict_data['y'].append(month_mapping.get(str(row[2])))
+        dict_data['x'].append(month_mapping.get(str(row[1])))
+        dict_data['y'].append(str(row[2]))
 
     return dict_data
 
